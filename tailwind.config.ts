@@ -26,11 +26,14 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					hover: 'hsl(var(--primary-hover))',
+					glow: 'hsl(var(--primary-glow))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+					foreground: 'hsl(var(--secondary-foreground))',
+					hover: 'hsl(var(--secondary-hover))'
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -42,7 +45,8 @@ export default {
 				},
 				accent: {
 					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
+					foreground: 'hsl(var(--accent-foreground))',
+					hover: 'hsl(var(--accent-hover))'
 				},
 				popover: {
 					DEFAULT: 'hsl(var(--popover))',
@@ -51,6 +55,20 @@ export default {
 				card: {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
+				},
+				aac: {
+					word: 'hsl(var(--aac-word))',
+					'word-foreground': 'hsl(var(--aac-word-foreground))',
+					phrase: 'hsl(var(--aac-phrase))',
+					'phrase-foreground': 'hsl(var(--aac-phrase-foreground))',
+					category: 'hsl(var(--aac-category))',
+					'category-foreground': 'hsl(var(--aac-category-foreground))',
+					action: 'hsl(var(--aac-action))',
+					'action-foreground': 'hsl(var(--aac-action-foreground))'
+				},
+				'sentence-strip': {
+					DEFAULT: 'hsl(var(--sentence-strip))',
+					foreground: 'hsl(var(--sentence-strip-foreground))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
