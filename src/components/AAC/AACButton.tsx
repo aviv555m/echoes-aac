@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
-export type AACButtonType = 'word' | 'phrase' | 'category' | 'action';
+export type AACButtonType = 'word' | 'phrase' | 'action';
 
 interface AACButtonProps {
   text: string;
@@ -11,6 +11,7 @@ interface AACButtonProps {
   onSpeak?: () => void;
   className?: string;
   usageCount?: number;
+  speechRate?: number;
 }
 
 const AACButton = ({ 
@@ -20,7 +21,8 @@ const AACButton = ({
   onClick, 
   onSpeak,
   className,
-  usageCount = 0
+  usageCount = 0,
+  speechRate = 1.0
 }: AACButtonProps) => {
   const [isPressed, setIsPressed] = useState(false);
 
@@ -33,7 +35,7 @@ const AACButton = ({
       onSpeak();
     } else {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.8;
+      utterance.rate = speechRate;
       utterance.volume = 0.8;
       speechSynthesis.speak(utterance);
     }
@@ -44,15 +46,13 @@ const AACButton = ({
   const getTypeStyles = () => {
     switch (type) {
       case 'word':
-        return 'bg-aac-word text-aac-word-foreground hover:bg-aac-word/90';
+        return 'bg-aac-word text-aac-word-foreground hover:bg-aac-word/90 border-aac-word-accent';
       case 'phrase':
-        return 'bg-aac-phrase text-aac-phrase-foreground hover:bg-aac-phrase/90';
-      case 'category':
-        return 'bg-aac-category text-aac-category-foreground hover:bg-aac-category/90';
+        return 'bg-aac-phrase text-aac-phrase-foreground hover:bg-aac-phrase/90 border-aac-phrase-accent';
       case 'action':
-        return 'bg-aac-action text-aac-action-foreground hover:bg-aac-action/90';
+        return 'bg-aac-action text-aac-action-foreground hover:bg-aac-action/90 border-aac-action-accent';
       default:
-        return 'bg-primary text-primary-foreground hover:bg-primary-hover';
+        return 'bg-primary text-primary-foreground hover:bg-primary/90 border-primary';
     }
   };
 

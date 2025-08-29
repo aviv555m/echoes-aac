@@ -6,6 +6,7 @@ interface SentenceStripProps {
   onRemoveWord: (index: number) => void;
   onClear: () => void;
   onSpeak: () => void;
+  speechRate?: number;
   className?: string;
 }
 
@@ -14,6 +15,7 @@ const SentenceStrip = ({
   onRemoveWord, 
   onClear, 
   onSpeak, 
+  speechRate = 1.0,
   className 
 }: SentenceStripProps) => {
   const handleSpeak = () => {
@@ -21,7 +23,7 @@ const SentenceStrip = ({
     
     const sentence = words.join(' ');
     const utterance = new SpeechSynthesisUtterance(sentence);
-    utterance.rate = 0.7;
+    utterance.rate = speechRate;
     utterance.volume = 0.9;
     speechSynthesis.speak(utterance);
     

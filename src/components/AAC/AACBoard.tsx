@@ -1,55 +1,46 @@
 import { useState, useEffect } from "react";
-import AACButton, { AACButtonType } from "./AACButton";
+import AACButton from "./AACButton";
 import SentenceStrip from "./SentenceStrip";
 import { cn } from "@/lib/utils";
-
-interface AACWord {
-  text: string;
-  type: AACButtonType;
-  category: string;
-  usageCount?: number;
-}
+import { PersonalizedBoard } from "@/utils/boardPersonalizer";
+import { AACWord } from "@/data/aacVocabulary";
 
 interface AACBoardProps {
-  personalizedWords?: AACWord[];
+  personalizedBoard?: PersonalizedBoard;
   onUsageUpdate?: (word: string) => void;
   className?: string;
 }
 
+// Fallback words if no personalized board is provided
 const defaultWords: AACWord[] = [
-  // Essential words
-  { text: "I", type: "word", category: "pronouns" },
-  { text: "want", type: "word", category: "verbs" },
-  { text: "need", type: "word", category: "verbs" },
-  { text: "help", type: "word", category: "verbs" },
-  { text: "please", type: "word", category: "social" },
-  { text: "thank you", type: "phrase", category: "social" },
-  
-  // Common requests
-  { text: "water", type: "word", category: "needs" },
-  { text: "food", type: "word", category: "needs" },
-  { text: "bathroom", type: "word", category: "needs" },
-  { text: "tired", type: "word", category: "feelings" },
-  { text: "happy", type: "word", category: "feelings" },
-  { text: "sad", type: "word", category: "feelings" },
-  
-  // Actions
-  { text: "go", type: "action", category: "actions" },
-  { text: "stop", type: "action", category: "actions" },
-  { text: "more", type: "action", category: "actions" },
-  { text: "finished", type: "action", category: "actions" },
-  
-  // Common phrases
-  { text: "I love you", type: "phrase", category: "social" },
-  { text: "good morning", type: "phrase", category: "social" },
-  { text: "good night", type: "phrase", category: "social" },
-  { text: "see you later", type: "phrase", category: "social" }
+  { text: "I", type: "word", category: "pronouns", priority: "high", tags: ["basic"] },
+  { text: "want", type: "word", category: "verbs", priority: "high", tags: ["basic"] },
+  { text: "need", type: "word", category: "verbs", priority: "high", tags: ["basic"] },
+  { text: "help", type: "word", category: "verbs", priority: "high", tags: ["basic"] },
+  { text: "yes", type: "word", category: "responses", priority: "high", tags: ["basic"] },
+  { text: "no", type: "word", category: "responses", priority: "high", tags: ["basic"] }
 ];
 
-const AACBoard = ({ personalizedWords, onUsageUpdate, className }: AACBoardProps) => {
-  const [words] = useState<AACWord[]>(personalizedWords || defaultWords);
+const AACBoard = ({ personalizedBoard, onUsageUpdate, className }: AACBoardProps) => {
+  // Create flat words array from personalized board or use defaults
+  const [words] = useState<AACWord[]>(() => {
+    if (personalizedBoard?.categories) {
+      const flatWords: AACWord[] = [];
+      Object.values(personalizedBoard.categories).forEach(categoryWords => {
+        flatWords.push(...categoryWords);
+      });
+      return flatWords;
+    }
+    return defaultWords;
+  });
+  
   const [sentenceWords, setSentenceWords] = useState<string[]>([]);
   const [usageStats, setUsageStats] = useState<Record<string, number>>({});
+  const [speechRate, setSpeechRate] = useState<number>(personalizedBoard?.speechSpeed || 1.0);
+  const [buttonSize, setButtonSize] = useState<'sm' | 'md' | 'lg'>(() => {
+    const size = personalizedBoard?.buttonSize || 'medium';
+    return size === 'small' ? 'sm' : size === 'large' ? 'lg' : 'md';
+  });
 
   // Load usage stats from localStorage
   useEffect(() => {
@@ -95,8 +86,8 @@ const AACBoard = ({ personalizedWords, onUsageUpdate, className }: AACBoardProps
     return bUsage - aUsage;
   });
 
-  // Group words by category
-  const categorizedWords = sortedWords.reduce((acc, word) => {
+  // Use personalized categories or group words by category
+  const categorizedWords = personalizedBoard?.categories || sortedWords.reduce((acc, word) => {
     if (!acc[word.category]) {
       acc[word.category] = [];
     }
@@ -104,36 +95,50 @@ const AACBoard = ({ personalizedWords, onUsageUpdate, className }: AACBoardProps
     return acc;
   }, {} as Record<string, AACWord[]>);
 
-  return (
-    <div className={cn("w-full max-w-6xl mx-auto p-6 space-y-6", className)}>
-      {/* Sentence Strip */}
-      <SentenceStrip
-        words={sentenceWords}
-        onRemoveWord={removeWord}
-        onClear={clearSentence}
-        onSpeak={speakSentence}
-      />
+  // Category name formatting
+  const formatCategoryName = (category: string) => {
+    return category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
 
-      {/* AAC Board */}
-      <div className="space-y-8">
+  return (
+    <div className={cn("min-h-screen bg-gradient-to-br from-background via-secondary/10 to-background", className)}>
+      {/* Sentence Strip - Fixed at top */}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <SentenceStrip
+            words={sentenceWords}
+            onRemoveWord={removeWord}
+            onClear={clearSentence}
+            onSpeak={speakSentence}
+            speechRate={speechRate}
+          />
+        </div>
+      </div>
+
+      {/* AAC Board - Full screen scrollable */}
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-8">
         {Object.entries(categorizedWords).map(([category, categoryWords]) => (
-          <div key={category} className="space-y-4">
-            <h3 className="text-xl font-semibold text-foreground capitalize">
-              {category}
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <section key={category} className="space-y-4">
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+              <h2 className="text-2xl font-bold text-primary capitalize">
+                {formatCategoryName(category)}
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3 lg:gap-4">
               {categoryWords.map((word, index) => (
                 <AACButton
                   key={`${word.text}-${index}`}
                   text={word.text}
                   type={word.type}
+                  size={buttonSize}
                   onClick={() => handleWordClick(word.text)}
                   usageCount={usageStats[word.text] || 0}
-                  className="transition-all duration-300"
+                  className="transition-all duration-300 hover:shadow-lg active:scale-95"
+                  speechRate={speechRate}
                 />
               ))}
             </div>
-          </div>
+          </section>
         ))}
       </div>
     </div>
