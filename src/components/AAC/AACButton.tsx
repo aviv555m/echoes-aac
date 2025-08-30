@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { icons } from "lucide-react";
 
 export type AACButtonType = 'word' | 'phrase' | 'action';
 
@@ -13,7 +12,6 @@ interface AACButtonProps {
   className?: string;
   usageCount?: number;
   speechRate?: number;
-  icon?: string;
 }
 
 const AACButton = ({ 
@@ -24,8 +22,7 @@ const AACButton = ({
   onSpeak,
   className,
   usageCount = 0,
-  speechRate = 1.0,
-  icon
+  speechRate = 1.0
 }: AACButtonProps) => {
   const [isPressed, setIsPressed] = useState(false);
 
@@ -73,15 +70,12 @@ const AACButton = ({
     }
   };
 
-  // Get icon component
-  const IconComponent = icon && icons[icon as keyof typeof icons];
-
   return (
     <button
       onClick={handleClick}
       className={cn(
         "rounded-xl font-medium transition-all duration-200",
-        "flex flex-col items-center justify-center text-center gap-1 p-2",
+        "flex items-center justify-center text-center",
         "shadow-md hover:shadow-lg active:scale-95",
         "border-2 border-transparent",
         "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -91,15 +85,7 @@ const AACButton = ({
         className
       )}
     >
-      {IconComponent && (
-        <IconComponent 
-          className={cn(
-            "flex-shrink-0",
-            size === 'sm' ? 'h-4 w-4' : size === 'lg' ? 'h-8 w-8' : 'h-6 w-6'
-          )} 
-        />
-      )}
-      <span className="leading-tight break-words max-w-full text-center">
+      <span className="leading-tight break-words max-w-full">
         {text}
       </span>
     </button>

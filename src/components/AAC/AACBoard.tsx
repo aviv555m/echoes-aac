@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import AACButton from "./AACButton";
 import SentenceStrip from "./SentenceStrip";
-import PersonalizationChat from "./PersonalizationChat";
 import { cn } from "@/lib/utils";
 import { PersonalizedBoard } from "@/utils/boardPersonalizer";
 import { AACWord } from "@/data/aacVocabulary";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, Settings } from "lucide-react";
 
 interface AACBoardProps {
   personalizedBoard?: PersonalizedBoard;
@@ -16,12 +13,12 @@ interface AACBoardProps {
 
 // Fallback words if no personalized board is provided
 const defaultWords: AACWord[] = [
-  { text: "I", type: "word", category: "pronouns", priority: "high", tags: ["basic"], icon: "user" },
-  { text: "want", type: "word", category: "verbs", priority: "high", tags: ["basic"], icon: "heart" },
-  { text: "need", type: "word", category: "verbs", priority: "high", tags: ["basic"], icon: "alert-circle" },
-  { text: "help", type: "word", category: "verbs", priority: "high", tags: ["basic"], icon: "helping-hand" },
-  { text: "yes", type: "word", category: "responses", priority: "high", tags: ["basic"], icon: "check" },
-  { text: "no", type: "word", category: "responses", priority: "high", tags: ["basic"], icon: "x" }
+  { text: "I", type: "word", category: "pronouns", priority: "high", tags: ["basic"] },
+  { text: "want", type: "word", category: "verbs", priority: "high", tags: ["basic"] },
+  { text: "need", type: "word", category: "verbs", priority: "high", tags: ["basic"] },
+  { text: "help", type: "word", category: "verbs", priority: "high", tags: ["basic"] },
+  { text: "yes", type: "word", category: "responses", priority: "high", tags: ["basic"] },
+  { text: "no", type: "word", category: "responses", priority: "high", tags: ["basic"] }
 ];
 
 const AACBoard = ({ personalizedBoard, onUsageUpdate, className }: AACBoardProps) => {
@@ -44,8 +41,6 @@ const AACBoard = ({ personalizedBoard, onUsageUpdate, className }: AACBoardProps
     const size = personalizedBoard?.buttonSize || 'medium';
     return size === 'small' ? 'sm' : size === 'large' ? 'lg' : 'md';
   });
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [dynamicCategories, setDynamicCategories] = useState<Record<string, AACWord[]>>({});
 
   // Load usage stats from localStorage
   useEffect(() => {
@@ -91,45 +86,14 @@ const AACBoard = ({ personalizedBoard, onUsageUpdate, className }: AACBoardProps
     return bUsage - aUsage;
   });
 
-  // Handle board updates from chat
-  const handleBoardUpdate = (suggestion: any) => {
-    if (suggestion.type === 'add_word') {
-      const newWord: AACWord = suggestion.data.word;
-      setDynamicCategories(prev => ({
-        ...prev,
-        [newWord.category]: [...(prev[newWord.category] || []), newWord]
-      }));
-    } else if (suggestion.type === 'add_category') {
-      const categoryName = suggestion.data.category;
-      setDynamicCategories(prev => ({
-        ...prev,
-        [categoryName]: []
-      }));
-    } else if (suggestion.type === 'modify_layout') {
-      if (suggestion.data.buttonSize) {
-        setButtonSize(suggestion.data.buttonSize);
-      }
-    }
-  };
-
-  // Merge personalized board with dynamic categories
-  const baseCategorizedWords = personalizedBoard?.categories || sortedWords.reduce((acc, word) => {
+  // Use personalized categories or group words by category
+  const categorizedWords = personalizedBoard?.categories || sortedWords.reduce((acc, word) => {
     if (!acc[word.category]) {
       acc[word.category] = [];
     }
     acc[word.category].push(word);
     return acc;
   }, {} as Record<string, AACWord[]>);
-
-  // Combine base categories with dynamic ones
-  const categorizedWords = { ...baseCategorizedWords };
-  Object.keys(dynamicCategories).forEach(category => {
-    if (categorizedWords[category]) {
-      categorizedWords[category] = [...categorizedWords[category], ...dynamicCategories[category]];
-    } else {
-      categorizedWords[category] = dynamicCategories[category];
-    }
-  });
 
   // Category name formatting
   const formatCategoryName = (category: string) => {
@@ -141,28 +105,13 @@ const AACBoard = ({ personalizedBoard, onUsageUpdate, className }: AACBoardProps
       {/* Sentence Strip - Fixed at top */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <SentenceStrip
-                words={sentenceWords}
-                onRemoveWord={removeWord}
-                onClear={clearSentence}
-                onSpeak={speakSentence}
-                speechRate={speechRate}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsChatOpen(true)}
-                className="gap-2"
-              >
-                <MessageSquare className="h-4 w-4" />
-                Personalize
-              </Button>
-            </div>
-          </div>
+          <SentenceStrip
+            words={sentenceWords}
+            onRemoveWord={removeWord}
+            onClear={clearSentence}
+            onSpeak={speakSentence}
+            speechRate={speechRate}
+          />
         </div>
       </div>
 
@@ -186,21 +135,12 @@ const AACBoard = ({ personalizedBoard, onUsageUpdate, className }: AACBoardProps
                   usageCount={usageStats[word.text] || 0}
                   className="transition-all duration-300 hover:shadow-lg active:scale-95"
                   speechRate={speechRate}
-                  icon={word.icon}
                 />
               ))}
             </div>
           </section>
         ))}
       </div>
-
-      {/* Personalization Chat */}
-      <PersonalizationChat
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-        onBoardUpdate={handleBoardUpdate}
-        currentBoard={categorizedWords}
-      />
     </div>
   );
 };
